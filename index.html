@@ -1,136 +1,362 @@
-
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <title>AI 덱 선택</title>
-  <style>
-    body { font-family: sans-serif; padding: 20px; background: #eef; }
-    .card { display: inline-block; margin: 5px; padding: 10px; border: 2px solid #aaa; border-radius: 8px; background: #fff; cursor: pointer; }
-    .card.selected { border-color: blue; background: #ddf; }
-  
-<style>
-  @media (max-width: 600px) {
-    body { padding: 10px; font-size: 16px; }
-    .card { width: 100px !important; font-size: 14px !important; }
-    button { font-size: 16px !important; padding: 8px 14px !important; }
-    #cardPool, #playerArea, #aiArea { display: flex; flex-wrap: wrap; justify-content: center; }
-  }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>HanjaRoots Pro - 한국어문회 마스터</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body { font-family: 'Noto Sans KR', sans-serif; -webkit-tap-highlight-color: transparent; overscroll-behavior-y: contain; background-color: #f1f5f2; }
+        .custom-scroll::-webkit-scrollbar { width: 4px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        
+        :root { --primary: #2c3e50; --secondary: #27ae60; }
 
-<style>
-.card {
-  border: 2px solid #333;
-  border-radius: 10px;
-  width: 120px;
-  height: 160px;
-  margin: 10px;
-  font-size: 16px;
-  font-weight: bold;
-  text-align: center;
-  padding-top: 20px;
-  box-shadow: 2px 2px 6px rgba(0,0,0,0.3);
-  transition: transform 0.2s;
-}
-.card:hover {
-  transform: scale(1.05);
-}
-.card.fire { background-color: #fdd; }
-.card.water { background-color: #ddf; }
-.card.grass { background-color: #dfd; }
-.card.special { background-color: #ffd; border: 3px solid gold; }
-.card .rank {
-  display: block;
-  font-size: 22px;
-  margin-top: 20px;
-  color: #333;
-}
-</style>
-
-</style>
-
-
-<style>
-.card {
-  border: 2px solid #333;
-  border-radius: 10px;
-  width: 120px;
-  height: 160px;
-  margin: 10px;
-  font-size: 16px;
-  font-weight: bold;
-  text-align: center;
-  padding-top: 20px;
-  box-shadow: 2px 2px 6px rgba(0,0,0,0.3);
-  transition: transform 0.2s;
-}
-.card:hover {
-  transform: scale(1.05);
-}
-.card.fire { background-color: #fdd; }
-.card.water { background-color: #ddf; }
-.card.grass { background-color: #dfd; }
-.card.special { background-color: #ffd; border: 3px solid gold; }
-.card .rank {
-  display: block;
-  font-size: 22px;
-  margin-top: 20px;
-  color: #333;
-}
-</style>
-
-</style>
-</head>
-<body>
-  <h1>🧠 AI 대전 - 덱 선택</h1>
-  <div id="cardPool"></div>
-  <p>선택한 카드: <span id="selectedCount">0</span>/5</p>
-  <button id="startBtn" disabled>AI와 대전 시작</button>
-
-  <script>
-    const cardPool = [
-  { name: "기절", special: true },
-  { name: "방어", special: true },
-  { name: "회복", special: true },
-      { name: "불-1", rank: 1, attr: "불" },
-      { name: "물-2", rank: 2, attr: "물" },
-      { name: "풀-3", rank: 3, attr: "풀" },
-      { name: "불-4", rank: 4, attr: "불" },
-      { name: "물-5", rank: 5, attr: "물" },
-      { name: "풀-6", rank: 6, attr: "풀" },
-      { name: "특수-역전", special: true }
-    ];
-
-    const selected = [];
-
-    const poolDiv = document.getElementById("cardPool");
-    const countSpan = document.getElementById("selectedCount");
-    const btn = document.getElementById("startBtn");
-
-    cardPool.forEach(card => {
-      const div = document.createElement("div");
-      div.className = "card";
-      div.textContent = card.name;
-      div.onclick = () => {
-        if (div.classList.contains("selected")) {
-          div.classList.remove("selected");
-          const idx = selected.findIndex(c => c.name === card.name);
-          if (idx > -1) selected.splice(idx, 1);
-        } else {
-          if (selected.length < 5) {
-            div.classList.add("selected");
-            selected.push(card);
-          }
+        #cardWrapper { position: relative; width: 100%; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s; }
+        .flip-card { perspective: 1000px; width: 100%; height: calc(100vh - 280px); min-height: 520px; max-height: 680px; }
+        .flip-card-inner { position: relative; width: 100%; height: 100%; transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1); transform-style: preserve-3d; }
+        .flip-card.flipped .flip-card-inner { transform: rotateY(180deg); }
+        
+        .flip-card-front, .flip-card-back { 
+            position: absolute; width: 100%; height: 100%; 
+            -webkit-backface-visibility: hidden; backface-visibility: hidden; 
+            border-radius: 2.5rem; display: flex; flex-direction: column; 
+            box-shadow: 0 20px 40px -15px rgb(0 0 0 / 0.1); border: 1px solid #e2e8f0; 
+            background: white; overflow: hidden;
         }
-        countSpan.innerText = selected.length;
-        btn.disabled = selected.length !== 5;
-      };
-      poolDiv.appendChild(div);
-    });
+        
+        .flip-card-front { align-items: center; justify-content: center; padding: 2rem; }
+        .flip-card-back { transform: rotateY(180deg); align-items: stretch; justify-content: flex-start; padding: 1.5rem 1.25rem; overflow-y: auto; }
 
-    btn.onclick = () => {
-      localStorage.setItem("ai_myDeck", JSON.stringify(selected));
-      window.location.href = "battle.html";
-    };
-  </script>
+        /* 슬라이드 애니메이션 */
+        .slide-out-left { transform: translateX(-130%) rotate(-10deg) !important; opacity: 0; transition: transform 0.3s ease-in; }
+        .slide-out-right { transform: translateX(130%) rotate(10deg) !important; opacity: 0; transition: transform 0.3s ease-in; }
+        .slide-in { animation: slideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1) forwards; }
+        @keyframes slideIn { from { transform: scale(0.9) translateY(40px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
+
+        .btn-active:active { transform: scale(0.92); }
+
+        /* 어원 분석 가독성 특화 (모바일 최적화) */
+        .etymology-text { 
+            font-size: 1.35rem; 
+            line-height: 1.6; 
+            word-break: keep-all; 
+            color: #1e40af;
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body class="text-slate-800 h-screen flex flex-col overflow-hidden select-none">
+
+    <header class="bg-white z-40 shrink-0 px-4 py-4 shadow-sm border-b border-slate-200">
+        <div class="max-w-4xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <div class="bg-[#2c3e50] p-2 rounded-xl shadow-md"><i data-lucide="book-marked" class="text-white w-5 h-5"></i></div>
+                <h1 class="text-xl font-black text-slate-900 tracking-tight">Hanja<span class="text-[#27ae60]">Roots</span></h1>
+            </div>
+            <div class="text-[10px] font-black text-slate-400 bg-slate-100 px-2 py-1 rounded-md uppercase">어문회 기준</div>
+        </div>
+    </header>
+
+    <main id="mainDashboard" class="flex-1 overflow-y-auto p-4 pb-24">
+        <div class="max-w-4xl mx-auto">
+            
+            <div class="mb-6 flex items-center justify-between bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm">
+                <div>
+                    <h2 id="totalProgressText" class="text-2xl font-black text-slate-900 leading-none">0% Done</h2>
+                    <span id="wordCountLabel" class="text-[11px] font-bold text-[#27ae60] uppercase tracking-widest mt-2 block">Loading Hanja...</span>
+                </div>
+                <button onclick="app.resetHistory()" class="p-2 text-slate-200 active:text-rose-500 transition-colors"><i data-lucide="refresh-cw" class="w-5 h-5"></i></button>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 mb-6">
+                <div class="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm">
+                    <p class="text-[9px] font-black text-slate-400 uppercase mb-1.5 text-center tracking-widest">응시 급수</p>
+                    <select id="courseLevel" onchange="app.loadLevelData()" class="w-full bg-transparent font-black text-[15px] outline-none text-center text-[#2c3e50]">
+                        <option value="8">8급 (기초 50자)</option>
+                        <option value="7">7급 (150자)</option>
+                        <option value="6">6급 (300자)</option>
+                        <option value="5">5급 (500자)</option>
+                        <option value="4">4급 (1000자)</option>
+                        <option value="3">3급 (1817자)</option>
+                        <option value="2">2급 (2355자)</option>
+                        <option value="1">1급 (3500자)</option>
+                    </select>
+                </div>
+                <div class="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm">
+                    <p class="text-[9px] font-black text-slate-400 uppercase mb-1.5 text-center tracking-widest">하루 학습량</p>
+                    <select id="dailyAmount" onchange="app.renderGrid()" class="w-full bg-transparent font-black text-[15px] outline-none text-center">
+                        <option value="10">10자씩</option>
+                        <option value="20" selected>20자씩</option>
+                        <option value="50">50자씩</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="daysGrid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4"></div>
+            
+            <div id="statusMsg" class="py-20 text-center text-slate-300 font-bold hidden">
+                <i data-lucide="loader-2" class="w-10 h-10 mx-auto mb-3 animate-spin opacity-20"></i>
+                데이터를 가져오는 중...
+            </div>
+        </div>
+    </main>
+
+    <div id="sessionLayer" class="fixed inset-0 z-[100] bg-white hidden flex flex-col overflow-hidden">
+        <div class="bg-white border-b border-slate-100 px-5 py-4 flex justify-between items-center shrink-0">
+            <button onclick="app.exitNow()" class="text-slate-400 p-2 btn-active"><i data-lucide="chevron-left" class="w-8 h-8"></i></button>
+            <div class="text-center">
+                <span id="sessionDayLabel" class="text-[10px] font-black text-[#27ae60] uppercase tracking-widest">DAY 01</span>
+                <div class="flex bg-slate-100 p-0.5 rounded-lg mt-0.5">
+                    <button id="mode-study" onclick="app.switchMode('study')" class="px-5 py-1.5 text-[11px] font-black rounded-md bg-white shadow-sm text-[#27ae60]">학습</button>
+                    <button id="mode-quiz" onclick="app.switchMode('quiz')" class="px-5 py-1.5 text-[11px] font-black rounded-md text-slate-400">테스트</button>
+                </div>
+            </div>
+            <div class="text-[11px] font-black min-w-[50px] text-right"><span id="sessionIdx" class="text-[#27ae60] text-lg">1</span><span class="text-slate-200 mx-1">/</span><span id="sessionTotal" class="text-slate-400">20</span></div>
+        </div>
+
+        <div id="sessionContent" class="flex-1 bg-slate-50 flex flex-col p-4 relative" ontouchstart="app.ts(event)" ontouchend="app.te(event)">
+            
+            <div id="studyUI" class="flex-1 flex flex-col items-center justify-center w-full max-w-md mx-auto">
+                <div id="cardWrapper" class="w-full slide-in">
+                    <div class="flip-card cursor-pointer" id="flashcard" onclick="app.handleCardClick()">
+                        <div class="flip-card-inner">
+                            <div class="flip-card-front">
+                                <span id="lLevelTag" class="px-3 py-1 bg-slate-100 text-slate-500 rounded-lg text-[10px] font-black mb-6 uppercase tracking-tighter">어문회 8급</span>
+                                <h2 id="lHanja" class="text-[9rem] font-black text-slate-900 leading-none mb-4"></h2>
+                                <p class="text-emerald-200 text-[10px] font-black uppercase tracking-[0.3em] absolute bottom-10">터치하여 뒤집기 / 스와이프 이동</p>
+                            </div>
+                            <div class="flip-card-back custom-scroll space-y-6">
+                                <div class="text-center shrink-0 mb-2 mt-4">
+                                    <span class="bg-[#2c3e50] text-white px-10 py-4 rounded-[2rem] text-3xl font-black inline-block shadow-xl" id="lMeaning"></span>
+                                </div>
+                                <div class="grid grid-cols-2 gap-3 shrink-0 px-2">
+                                    <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-center">
+                                        <p class="text-[11px] text-slate-400 font-bold mb-1">부수</p>
+                                        <p id="lRadical" class="text-2xl font-black text-slate-700"></p>
+                                    </div>
+                                    <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-center">
+                                        <p class="text-[11px] text-slate-400 font-bold mb-1">총획</p>
+                                        <p id="lStrokes" class="text-2xl font-black text-slate-700"></p>
+                                    </div>
+                                </div>
+                                <div class="bg-blue-50 p-6 rounded-[2rem] border border-blue-100 shrink-0 mx-2">
+                                    <p class="text-blue-800 font-black text-[11px] uppercase mb-3 flex items-center gap-1.5"><i data-lucide="layers" class="w-4 h-4"></i> 결합 원리 (어원 분석)</p>
+                                    <p id="lEtym" class="etymology-text"></p>
+                                </div>
+                                <div class="bg-white p-5 rounded-[2rem] border border-slate-200 shrink-0 mx-2 mb-4">
+                                    <p class="text-slate-400 font-black text-[11px] uppercase mb-2">필수 활용 단어</p>
+                                    <p id="lExample" class="text-slate-800 font-black text-xl leading-snug"></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-8 flex gap-4 w-full">
+                    <button onclick="app.navCard(-1)" class="h-16 w-16 bg-white border border-slate-200 rounded-3xl flex items-center justify-center text-slate-400 btn-active shadow-sm"><i data-lucide="chevron-left" class="w-10 h-10"></i></button>
+                    <button id="nextBtn" onclick="app.navCard(1)" class="flex-1 h-16 bg-slate-900 text-white rounded-3xl font-black shadow-xl">다음 한자</button>
+                </div>
+            </div>
+
+            <div id="quizUI" class="hidden flex-1 flex flex-col items-center justify-start w-full max-w-md mx-auto overflow-y-auto pb-10">
+                <div class="w-full bg-white rounded-[2.5rem] shadow-xl p-10 mb-6 mt-4 border border-slate-200 text-center relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-full h-1 bg-slate-50"><div id="qBar" class="h-full bg-[#27ae60] transition-all duration-300"></div></div>
+                    <h3 id="qHanja" class="text-8xl font-black text-slate-900 leading-none mb-8"></h3>
+                    <button onclick="document.getElementById('qHintContent').classList.remove('hidden'); this.classList.add('hidden');" class="mx-auto flex items-center gap-1.5 text-[12px] font-black text-blue-500 bg-blue-50 px-6 py-3 rounded-full border border-blue-100">
+                        <i data-lucide="lightbulb" class="w-4 h-4"></i> 부수 및 어원 힌트 보기
+                    </button>
+                    <div id="qHintContent" class="hidden mt-6 text-left border-t border-slate-100 pt-6">
+                        <p id="qHintRadical" class="text-xs font-bold text-slate-400 mb-2"></p>
+                        <p id="qHintEtym" class="text-lg font-bold text-blue-800 bg-blue-50 p-4 rounded-2xl leading-relaxed"></p>
+                    </div>
+                </div>
+                <div id="qOptions" class="w-full flex flex-col gap-3 shrink-0"></div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const app = {
+            db: [], history: {}, sessionWords: [], sessionIdx: 0,
+            score: 0, isAns: false, mode: 'study', 
+            tx: 0, ty: 0, isSwiping: false,
+
+            async init() {
+                this.loadHistory();
+                await this.loadLevelData();
+                if(window.lucide) window.lucide.createIcons();
+            },
+
+            // 📂 급수별 데이터 로딩 (파일명: level8.json, level7.json ...)
+            async loadLevelData() {
+                const lvl = document.getElementById('courseLevel').value;
+                const status = document.getElementById('statusMsg');
+                const label = document.getElementById('wordCountLabel');
+                
+                status.classList.remove('hidden');
+                label.textContent = "Loading...";
+
+                try {
+                    const res = await fetch(`./level${lvl}.json`);
+                    if(res.ok) {
+                        const json = await res.json();
+                        this.db = Array.isArray(json) ? json : (json.hanja || []);
+                        label.textContent = `${this.db.length.toLocaleString()} Hanja Loaded`;
+                        this.renderGrid();
+                    } else {
+                        throw new Error("File not found");
+                    }
+                } catch(e) {
+                    label.textContent = "Data File Missing";
+                    document.getElementById('daysGrid').innerHTML = `
+                        <div class="col-span-full py-10 text-center text-slate-400 font-bold">
+                            level${lvl}.json 파일을 찾을 수 없습니다.
+                        </div>
+                    `;
+                } finally {
+                    status.classList.add('hidden');
+                }
+            },
+
+            loadHistory() {
+                const h = localStorage.getItem('hanja_roots_history');
+                if(h) this.history = JSON.parse(h);
+            },
+
+            resetHistory() { if(confirm("학습 이력을 초기화할까요?")) { localStorage.removeItem('hanja_roots_history'); location.reload(); } },
+
+            renderGrid() {
+                const grid = document.getElementById('daysGrid'); grid.innerHTML = '';
+                const size = parseInt(document.getElementById('dailyAmount').value);
+                const days = Math.ceil(this.db.length / size);
+                
+                let completed = 0;
+                for(let i=0; i<days; i++){
+                    const key = `lvl${document.getElementById('courseLevel').value}_day${i+1}`;
+                    const score = this.history[key];
+                    if(score) completed++;
+
+                    const card = document.createElement('div');
+                    card.className = "bg-white p-6 rounded-[2.2rem] border border-slate-200 shadow-sm active:scale-95 transition-all text-center cursor-pointer relative overflow-hidden";
+                    card.onclick = () => this.startSession(this.db.slice(i*size, (i+1)*size), i+1, key);
+                    
+                    const check = score ? `<div class="absolute top-3 right-3 bg-emerald-500 text-white p-1 rounded-full"><i data-lucide="check" class="w-3 h-3"></i></div>` : '';
+                    
+                    card.innerHTML = `${check}
+                        <div class="w-10 h-10 mx-auto bg-slate-50 rounded-xl flex items-center justify-center text-slate-400 font-black text-xs mb-3">${i+1}</div>
+                        <h3 class="font-black text-slate-800 text-lg">Day ${i+1}</h3>
+                        <p class="text-[10px] font-black text-[#27ae60] mt-1 uppercase tracking-tighter">${score || 'Ready'}</p>`;
+                    grid.appendChild(card);
+                }
+                const pct = days > 0 ? Math.round((completed/days)*100) : 0;
+                document.getElementById('totalProgressText').textContent = `${pct}% Done`;
+                if(window.lucide) window.lucide.createIcons();
+            },
+
+            ts(e) { this.tx = e.changedTouches[0].screenX; this.ty = e.changedTouches[0].screenY; this.isSwiping = false; },
+            te(e) {
+                const dx = e.changedTouches[0].screenX - this.tx;
+                const dy = e.changedTouches[0].screenY - this.ty;
+                if(Math.abs(dx) > 60 && Math.abs(dy) < 100 && this.mode === 'study') {
+                    this.isSwiping = true;
+                    if(dx > 0) this.navCard(-1); else this.navCard(1);
+                }
+            },
+
+            handleCardClick() { if (!this.isSwiping) document.getElementById('flashcard').classList.toggle('flipped'); },
+
+            startSession(words, dayNum, key) {
+                this.sessionWords = words; this.sessionIdx = 0; this.mode = 'study'; this.currentKey = key;
+                document.getElementById('sessionLayer').classList.remove('hidden');
+                document.getElementById('sessionDayLabel').textContent = `Day ${dayNum}`;
+                document.getElementById('sessionTotal').textContent = words.length;
+                this.renderStudy();
+            },
+
+            renderStudy() {
+                const w = this.sessionWords[this.sessionIdx];
+                const card = document.getElementById('flashcard');
+                const inner = document.querySelector('.flip-card-inner');
+                
+                inner.style.transition = 'none'; card.classList.remove('flipped'); void inner.offsetWidth; inner.style.transition = '';
+
+                document.getElementById('sessionIdx').textContent = this.sessionIdx + 1;
+                document.getElementById('lLevelTag').textContent = `어문회 ${document.getElementById('courseLevel').value}급`;
+                document.getElementById('lHanja').textContent = w.hanja;
+                document.getElementById('lMeaning').textContent = w.meaning;
+                document.getElementById('lRadical').textContent = w.radical;
+                document.getElementById('lStrokes').textContent = w.strokes;
+                document.getElementById('lEtym').textContent = w.etymology;
+                document.getElementById('lExample').textContent = w.example;
+                
+                document.getElementById('nextBtn').textContent = this.sessionIdx === this.sessionWords.length - 1 ? "실전 테스트" : "다음 한자";
+                if(window.lucide) window.lucide.createIcons();
+            },
+
+            navCard(dir) {
+                const wrap = document.getElementById('cardWrapper');
+                if(dir === -1 && this.sessionIdx > 0) { 
+                    wrap.classList.remove('slide-in'); wrap.classList.add('slide-out-right');
+                    setTimeout(() => { this.sessionIdx--; this.renderStudy(); wrap.classList.remove('slide-out-right'); wrap.classList.add('slide-in'); }, 200);
+                }
+                else if(dir === 1) {
+                    if(this.sessionIdx < this.sessionWords.length - 1) { 
+                        wrap.classList.remove('slide-in'); wrap.classList.add('slide-out-left');
+                        setTimeout(() => { this.sessionIdx++; this.renderStudy(); wrap.classList.remove('slide-out-left'); wrap.classList.add('slide-in'); }, 200);
+                    } else { this.switchMode('quiz'); }
+                }
+            },
+
+            switchMode(m) {
+                this.mode = m;
+                document.getElementById('studyUI').classList.add('hidden');
+                document.getElementById('quizUI').classList.add('hidden');
+                document.getElementById(`${m}UI`).classList.remove('hidden');
+                if(m === 'quiz') { this.sessionIdx = 0; this.score = 0; this.loadQuiz(); }
+            },
+
+            loadQuiz() {
+                if(this.sessionIdx >= this.sessionWords.length) return this.showResult();
+                this.isAns = false;
+                const w = this.sessionWords[this.sessionIdx];
+                document.getElementById('sessionIdx').textContent = this.sessionIdx + 1;
+                document.getElementById('qBar').style.width = `${(this.sessionIdx/this.sessionWords.length)*100}%`;
+                document.getElementById('qHanja').textContent = w.hanja;
+                document.getElementById('qHintContent').classList.add('hidden');
+                document.getElementById('qHintContent').previousElementSibling.classList.remove('hidden');
+                document.getElementById('qHintRadical').textContent = `부수: ${w.radical} (${w.strokes})`;
+                document.getElementById('qHintEtym').textContent = w.etymology;
+
+                const opts = [{t:w.meaning, c:true}, ...this.db.filter(x=>x.meaning!==w.meaning).sort(()=>Math.random()-0.5).slice(0,3).map(x=>({t:x.meaning, c:false}))].sort(()=>Math.random()-0.5);
+                const cont = document.getElementById('qOptions'); cont.innerHTML = '';
+                opts.forEach((o, i) => {
+                    const b = document.createElement('button');
+                    b.className = "w-full text-left p-5 rounded-[1.5rem] border-2 border-slate-200 bg-white font-black text-slate-700 flex items-center shadow-sm";
+                    b.innerHTML = `<span class="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center mr-4 text-xs font-black text-slate-400">${i+1}</span> <span class="text-xl">${o.t}</span>`;
+                    b.onclick = () => {
+                        if(this.isAns) return; this.isAns = true;
+                        b.className = o.c ? "w-full text-left p-5 rounded-[1.5rem] border-2 border-[#27ae60] bg-emerald-50 font-black text-[#27ae60] flex items-center" : "w-full text-left p-5 rounded-[1.5rem] border-2 border-rose-500 bg-rose-50 font-black text-rose-700 flex items-center";
+                        if(o.c) this.score++;
+                        setTimeout(() => { this.sessionIdx++; this.loadQuiz(); }, 1000);
+                    };
+                    cont.appendChild(b);
+                });
+            },
+
+            showResult() {
+                const finalScore = `${this.score}/${this.sessionWords.length}`;
+                this.history[this.currentKey] = finalScore;
+                localStorage.setItem('hanja_roots_history', JSON.stringify(this.history));
+                this.exitNow();
+            },
+
+            exitNow() { document.getElementById('sessionLayer').classList.add('hidden'); this.renderGrid(); }
+        };
+        
+        window.onload = () => app.init();
+    </script>
 </body>
 </html>
